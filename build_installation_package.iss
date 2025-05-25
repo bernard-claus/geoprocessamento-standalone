@@ -19,3 +19,6 @@ Name: "{commondesktop}\Geoprocessamento Gabriela Figueiredo"; Filename: "{app}\G
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
+
+[Run]
+Filename: "{app}\Geoprocessamento_Gabriela_F.exe"; Description: "&Iniciar ferramenta"; Flags: nowait postinstall skipifsilent

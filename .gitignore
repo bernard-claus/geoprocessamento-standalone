@@ -1,7 +1,7 @@
 node_modules/
 web/node_modules
 web/dist
-dist/Geoprocessamento_Gabriela_F
-build/Geoprocessamento_Gabriela_F
+dist/
+build
 build/
 Geoprocessamento_Gabriela_F_Installer.exe
