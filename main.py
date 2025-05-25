@@ -9,6 +9,8 @@ from api_class.api_class import Api
 PORT = 5000
 DIST_DIR = os.path.join(os.path.dirname(__file__), "web", "dist")
 
+__version__ = '1.0.0'
+
 app = Flask(__name__, static_folder=DIST_DIR)
 
 # Ensure correct MIME types for .js and .css files (Windows fix)
