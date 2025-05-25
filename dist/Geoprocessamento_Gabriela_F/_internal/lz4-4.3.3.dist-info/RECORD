@@ -1,0 +1,17 @@
+lz4-4.3.3.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+lz4-4.3.3.dist-info/LICENSE,sha256=4qxD1uuA605SFBgXyBJDfguYGx17LcfMhsfvVSQETG8,1495
+lz4-4.3.3.dist-info/METADATA,sha256=vKOcaH4VsSq_ohI1c2UVe3bZ1PQGRDO0550shgut9CA,3750
+lz4-4.3.3.dist-info/RECORD,,
+lz4-4.3.3.dist-info/WHEEL,sha256=4-iQBlRoDdX1wfPofc7KLWa5Cys4eZSgXs6GVU8fKlQ,101
+lz4-4.3.3.dist-info/top_level.txt,sha256=cX6_gxFUdNSo40TfxrGpTCgu7epGm3yW3m2k7irTDzI,4
+lz4/__init__.py,sha256=etsV-XG9vgCn-EKrFpzWJsGIp-VUtH-tpNrQmMmDECU,627
+lz4/__pycache__/__init__.cpython-313.pyc,,
+lz4/__pycache__/version.cpython-313.pyc,,
+lz4/_version.cp313-win_amd64.pyd,sha256=S4e870_LPV7IvWtQrpDr1vxWrQe_DzHdzBCcPzUmU2o,11264
+lz4/block/__init__.py,sha256=KsSQGgaPpJtVPJ5QfMadVGFduMy0hSetJHWGNmOvpso,70
+lz4/block/__pycache__/__init__.cpython-313.pyc,,
+lz4/block/_block.cp313-win_amd64.pyd,sha256=QXn68DBGNsNlAqEZKsvIgKPvsthMOFPTOUaKnM-9UpU,77312
+lz4/frame/__init__.py,sha256=EqfNnlmPh7PD0t-DvfKejRWmIsR7Uf5OJKWdlC3SU3A,31131
+lz4/frame/__pycache__/__init__.cpython-313.pyc,,
+lz4/frame/_frame.cp313-win_amd64.pyd,sha256=d7q3PTEnp3t5Vrtt9LNkcFhSRj2HsbnL3ffKiEBgvaA,114688
+lz4/version.py,sha256=Ape9hKorNbsXoRN8UUYha-Qr3lKx__LZXfqYMK8m8GA,427
