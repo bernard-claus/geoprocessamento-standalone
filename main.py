@@ -1,15 +1,19 @@
 import os
+import requests
+import webbrowser
 import threading
 import webview
 from flask import Flask, send_from_directory, Response
 import mimetypes
 from api_class.api_class import Api
+from api_class.constants.version import VERSION
 
 # Config
 PORT = 5000
 DIST_DIR = os.path.join(os.path.dirname(__file__), "web", "dist")
+GITHUB_REPO = "bernard-claus/geoprocessamento-standalone"
 
-__version__ = '1.0.0'
+__version__ = VERSION
 
 app = Flask(__name__, static_folder=DIST_DIR)
 
@@ -48,4 +52,4 @@ def start_flask():
 if __name__ == "__main__":
     threading.Thread(target=start_flask, daemon=True).start()
     webview.create_window("Ferramentas de Geoprocessamento - Gabriela Figueiredo", f"http://localhost:{PORT}", js_api=Api(), maximized=True)
-    webview.start(debug=False,  gui='edgechromium')
+    webview.start(debug=True,  gui='edgechromium')
