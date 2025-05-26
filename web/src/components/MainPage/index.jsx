@@ -53,7 +53,7 @@ const MainPage = () => {
           fontSize: '14px',
         }}
       >
-        <span>v1.0.0</span>
+        <span>{`v${version}`}</span>
       </span>
       <CheckUpdates />
       <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>

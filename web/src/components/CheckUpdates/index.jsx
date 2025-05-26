@@ -21,7 +21,7 @@ const CheckUpdates = () => {
   }
 
   return (
-    <div style={{ position:'absolute', top: 0, left: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
       <span
         onClick={loading ? undefined : handleCheck}
         style={{

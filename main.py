@@ -52,4 +52,4 @@ def start_flask():
 if __name__ == "__main__":
     threading.Thread(target=start_flask, daemon=True).start()
     webview.create_window("Ferramentas de Geoprocessamento - Gabriela Figueiredo", f"http://localhost:{PORT}", js_api=Api(), maximized=True)
-    webview.start(debug=True,  gui='edgechromium')
+    webview.start(debug=False,  gui='edgechromium')
