@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Breadcrumbs, Button, Typography, Box, Stack } from '@mui/material'
 import GeradorDePerfil from '../GeradorDePerfil'
+import KmlFromPhotos from '../KmlFromPhotos'
 import { useToolContext } from '../../contexts/ToolContext'
 import CheckUpdates from '../CheckUpdates'
 
@@ -14,6 +15,10 @@ const MainPage = () => {
       name: 'Gerador de perfil',
       component: <GeradorDePerfil />,
     },
+    {
+      name: 'KML de fotos',
+      component: <KmlFromPhotos />,
+    },
   ]
 
   const handleSelectTool = (tool) => {
@@ -22,15 +27,15 @@ const MainPage = () => {
 
   useEffect(() => {
     function fetchVersion() {
-      if (window.pywebview && window.pywebview.api && window.pywebview.api.get_version) {
-        window.pywebview.api.get_version().then(res => {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.utils && window.pywebview.api.utils.get_version) {
+        window.pywebview.api.utils.get_version().then(res => {
           setVersion(res.version)
         })
       }
     }
 
     // If pywebview is already ready, fetch immediately
-    if (window.pywebview && window.pywebview.api && window.pywebview.api.get_version) {
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.utils && window.pywebview.api.utils.get_version) {
       fetchVersion()
     } else {
       // Otherwise, wait for the event
@@ -73,14 +78,18 @@ const MainPage = () => {
           <Typography variant="h5" sx={{ mb: 2 }}>
             Selecione uma ferramenta:
           </Typography>
-          {AVAILABLE_TOOLS.map((tool) => (
-            <Button
-              variant="contained"
-              onClick={() => handleSelectTool(tool.name)}
-            >
-              {tool.name}
-            </Button>
-          ))}
+          <Stack spacing={3} sx={{ mb: 2 }}>
+            {AVAILABLE_TOOLS.map((tool) => (
+              <Button
+                key={tool.name}
+                variant="contained"
+                onClick={() => handleSelectTool(tool.name)}
+                sx={{ minWidth: 200, height: 48, fontSize: 16 }}
+              >
+                {tool.name}
+              </Button>
+            ))}
+          </Stack>
         </Stack>
       ) : (
         <div

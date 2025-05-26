@@ -19,7 +19,7 @@ const GeradorDePerfil = () => {
 
   // result.file_data is the base64 string from the backend
   const downloadDxf = async () => {
-    const res = await window.pywebview.api.save_dxf(result.file_data, files[0].name.split('.dxf').join(''))
+    const res = await window.pywebview.api.perfil.save_dxf(result.file_data, files[0].name.split('.dxf').join(''))
     if (res && res.success && res.saved_path) {
       setSavedPath(res.saved_path)
     }
@@ -33,12 +33,12 @@ const GeradorDePerfil = () => {
       const reader = new FileReader()
       reader.onload = async (e) => {
         const fileData = e.target.result
-        // Send fileData to Python backend
         const inputs = Object.fromEntries(INPUT_FIELDS.map(i => {
           const val = document.getElementById(i.name).value
           return [i.name, val]
         }))
-        const res = await window.pywebview.api.gerar_perfil_multicortes(fileData, inputs)
+        // CHANGED: Use window.pywebview.api.perfil.gerar_perfil_multicortes
+        const res = await window.pywebview.api.perfil.gerar_perfil_multicortes(fileData, inputs)
         if (res === null) throw new Error('Something went wrong')
         enqueueSnackbar('Perfil gerado com sucesso', { variant: 'success' })
         setResult(res)
@@ -104,7 +104,7 @@ const GeradorDePerfil = () => {
         )}
       </div>
       <Button disabled={!result} variant='contained' onClick={() => downloadDxf()}>Baixar o arquivo</Button>
-      <Button disabled={!savedPath} variant='outlined' style={{marginTop: 8}} onClick={() => window.pywebview.api.open_in_explorer(savedPath)}>
+      <Button disabled={!savedPath} variant='outlined' style={{marginTop: 8}} onClick={() => window.pywebview.api.utils.open_in_explorer(savedPath)}>
         Abrir pasta do arquivo
       </Button>
     </div>
