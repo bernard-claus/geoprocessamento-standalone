@@ -213,14 +213,10 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
 
     # Definir linhas de corte
     for e in [e for e in msp.query('LINE') if e.dxftype() == 'LINE' and e.dxf.layer==CORTE_LAYER]:
-        if self.should_cancel:
-            return None
         definir_linhas_de_corte(e)
             
     # Definir intersecoes
     for index, line in enumerate(linhas_de_corte):
-        if self.should_cancel:
-            return None
         try:
             intersecoes_da_linha = []
             output_dict = {}
@@ -249,8 +245,6 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
 
     # Gerando o grid
     for index_line, line in enumerate(linhas_com_intersecao):
-        if self.should_cancel:
-            return None
         try:
             points_list = []
             intersections = line['intersecoes_da_linha']
@@ -268,8 +262,6 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             points_list.append(Point(x_0,y_0))
 
             for index, point in enumerate(intersections):
-                if self.should_cancel:
-                    return None
                 if index==0:
                     x = x_0 + N(line['p1_corte'].distance(Point(point[0],point[1])))
                     #print('Evaluating intersection #%s' % index)
@@ -303,8 +295,6 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             window.evaluate_js(f"window.handleProgress('Gerando o Grid')")
             
             for index, point in enumerate(points_list):
-                if self.should_cancel:
-                    return None
                 if index==0:
                     temp_str += str(point).split('2D')[0] + str(point).split('2D')[1]
                 if index>0:
@@ -323,8 +313,6 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             grid_heights.append(grid_height)
             range_x = math.ceil(line['grid_length']/x_distance)
             for i in range (1, range_x):
-                if self.should_cancel:
-                    return None
                 temp_x=grid_x0+x_distance*i
                 grid_strx='Point(temp_x, grid_y0), Point(temp_x, grid_y1)'
                 msp.add_polyline2d(eval(grid_strx), dxfattribs={'layer': 'GRID_AUTO_' + str(index_line)})
@@ -351,8 +339,6 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
 
             range_y = math.ceil(grid_height/y_distance)
             for i in range(1, range_y):
-                if self.should_cancel:
-                    return None
                 temp_y = grid_y0 + y_distance * i * y_scale
                 altitude_atual = round(elevation_min + y_distance * i - elevation_min % y_distance)
                 grid_stry='Point(grid_x0, temp_y), Point(grid_x1, temp_y)'

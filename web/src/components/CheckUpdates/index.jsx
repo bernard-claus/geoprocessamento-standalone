@@ -11,7 +11,7 @@ const CheckUpdates = () => {
     setError(null)
     setUpdateInfo(null)
     try {
-      const result = await window.pywebview.api.check_for_update()
+      const result = await window.pywebview.api.utils.check_for_update()
       setUpdateInfo(result)
     } catch (err) {
       setError('Erro ao buscar atualizações.')

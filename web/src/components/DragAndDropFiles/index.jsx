@@ -8,6 +8,7 @@ import MainStack from './components/MainStack'
 
 const DragAndDropFiles = ({
   acceptedExtensions = ['dxf'],
+  isDir=false,
   backgroundColor = '#c9e0f580',
   borderRadius = '25px',
   borderColor = '#243782',
@@ -38,6 +39,7 @@ const DragAndDropFiles = ({
     if (disabled) return
     event.preventDefault()
     const droppedFiles = eventTarget.files
+    console.log({droppedFiles})
     if ((!multiple && droppedFiles.length > 1) || (!multiple && files.length > 0)) {
       enqueueSnackbar('This drag and drop accepts only one file', { variant: 'warning' })
       setDragOver(false)
@@ -49,7 +51,7 @@ const DragAndDropFiles = ({
       return
     }
     const newFiles = Array.from(droppedFiles)
-    const validExtensions = validateExtensions(newFiles, acceptedExtensions)
+    const validExtensions = validateExtensions(newFiles, acceptedExtensions, isDir)
     if (!validExtensions) {
       enqueueSnackbar('One or more file extensions are not accepted', { variant: 'error' })
       setDragOver(false)

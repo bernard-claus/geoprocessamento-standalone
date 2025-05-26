@@ -7,6 +7,9 @@ from flask import Flask, send_from_directory, Response
 import mimetypes
 from api_class.api_class import Api
 from api_class.constants.version import VERSION
+from api_class.gerador_perfil_api import GeradorPerfilApi
+from api_class.kml_photos_api import KmlPhotosApi
+from api_class.api_root import ApiRoot
 
 # Config
 PORT = 5000
@@ -51,5 +54,10 @@ def start_flask():
 
 if __name__ == "__main__":
     threading.Thread(target=start_flask, daemon=True).start()
-    webview.create_window("Ferramentas de Geoprocessamento - Gabriela Figueiredo", f"http://localhost:{PORT}", js_api=Api(), maximized=True)
-    webview.start(debug=False,  gui='edgechromium')
+    webview.create_window(
+        "Ferramentas de Geoprocessamento - Gabriela Figueiredo",
+        f"http://localhost:{PORT}",
+        js_api=ApiRoot(),
+        maximized=True
+    )
+    webview.start(debug=True,  gui='edgechromium')
