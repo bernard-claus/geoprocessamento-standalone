@@ -60,4 +60,4 @@ if __name__ == "__main__":
         js_api=ApiRoot(),
         maximized=True
     )
-    webview.start(debug=True,  gui='edgechromium')
+    webview.start(debug=False, gui='edgechromium')

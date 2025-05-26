@@ -39,7 +39,6 @@ const DragAndDropFiles = ({
     if (disabled) return
     event.preventDefault()
     const droppedFiles = eventTarget.files
-    console.log({droppedFiles})
     if ((!multiple && droppedFiles.length > 1) || (!multiple && files.length > 0)) {
       enqueueSnackbar('This drag and drop accepts only one file', { variant: 'warning' })
       setDragOver(false)

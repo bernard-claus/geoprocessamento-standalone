@@ -1,6 +1,6 @@
 [Setup]
 AppName=Geoprocessamento Gabriela Figueiredo
-AppVersion=1.0
+AppVersion=1.1.0
 DefaultDirName={pf}\GeoprocessamentoGabrielaF
 DefaultGroupName=Geoprocessamento Gabriela Figueiredo
 OutputDir=.
