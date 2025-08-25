@@ -24,7 +24,9 @@ jobs:
         python-version: '3.13'
 
     - name: Install dependencies
-      run: pip install pyinstaller
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
 
     - name: Build executable with PyInstaller
       run: |
