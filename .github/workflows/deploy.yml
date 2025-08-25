@@ -37,7 +37,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: installer
-        path: /*.exe   # Adjust to where your Inno script outputs
+        path: Output/*.exe   # Adjust to where your Inno script outputs
 
   release:
     runs-on: ubuntu-latest
