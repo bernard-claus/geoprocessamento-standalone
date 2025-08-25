@@ -9,7 +9,7 @@ from api_class.constants.version import VERSION
 
 
 __version__ = VERSION  # Update this with each release
-GITHUB_REPO = 'bernard-claus/geoprocessamento-standalone'  # Replace with your actual repo
+GITHUB_REPO = 'bernard-claus/geoprocessamento-standalone' 
 
 class Api:
     global __version__, GITHUB_REPO

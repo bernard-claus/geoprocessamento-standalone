@@ -1,6 +1,6 @@
 {
-  "name": "react-pywebview-app",
-  "version": "1.0.0",
+  "name": "ferramentas_geoprocessamento",
+  "version": "1.2.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
