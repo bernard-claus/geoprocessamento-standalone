@@ -22,6 +22,7 @@ const ShapeVertices = () => {
   const [savedPath, setSavedPath] = useState(null)
   const [vertices, setVertices] = useState([])
   const [option, setOption] = useState({
+    animation: false,
     xAxis: { show: false },
     yAxis: { show: false },
     series: [{ data: [], type: 'line' }],
@@ -75,8 +76,8 @@ const ShapeVertices = () => {
         }],
         tooltip: {
           trigger: 'item',
-          formatter: (_) => {
-            const ind = params.dataIndex
+          formatter: (parm) => {
+            const ind = parm.dataIndex
             const matchingPoint = reorderedData[ind]
             return `
               <b>Ponto:</b> ${ind}
@@ -193,18 +194,18 @@ const ShapeVertices = () => {
         </ul>
       </div>
       <div style={{ width: '80%', height: '100%', marginBottom: '20px', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-        <Button variant='outlined' onClick={handleSelectFile} style={{ marginRight: 16 }}>
+        <Button fullWidth variant='outlined' onClick={handleSelectFile} style={{ marginRight: 16 }}>
           Selecionar arquivo shp
           <FileOpenIcon sx={{ marginLeft: '10px' }} />
         </Button>
+        <Button fullWidth disabled={filePath === ''} variant='contained' onClick={() => getVertices()}>
+          Obter vertices
+          <GpsFixedIcon sx={{ marginLeft: '10px' }} />
+        </Button>
       </div>
-      <Button disabled={filePath === ''} variant='contained' onClick={() => getVertices()}>
-        Obter vertices
-        <GpsFixedIcon sx={{ marginLeft: '10px' }} />
-      </Button>
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-start', width: '80%' }}>
         <Stack spacing={3} sx={{ width: '20%', marginTop: '40px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', height: '400px', overflowY: 'scroll', border: '1px solid black', borderRadius: '10px', padding: '20px', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', height: '400px', overflowY: 'scroll', border: '1px solid black', borderRadius: '10px', padding: '20px' }}>
             {messages.map(m => <span key={`${m}`}>{m}</span>)}
           </div>
           {/* !!finished */}
