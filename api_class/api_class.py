@@ -21,6 +21,7 @@ class Api:
 
 
     def open_in_explorer(self, file_path):
+        print(file_path)
         if file_path and os.path.exists(file_path):
             os.startfile(os.path.dirname(file_path))
             return {'success': True}
@@ -71,6 +72,13 @@ class Api:
 
     def select_folder(self):
         result = webview.windows[0].create_file_dialog(webview.FOLDER_DIALOG)
+        print(result)
+        if result and isinstance(result, tuple) and len(result) > 0:
+            return result[0]
+        return None
+    
+    def select_file(self):
+        result = webview.windows[0].create_file_dialog(webview.OPEN_DIALOG)
         print(result)
         if result and isinstance(result, tuple) and len(result) > 0:
             return result[0]
