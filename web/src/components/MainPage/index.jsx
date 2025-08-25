@@ -4,6 +4,7 @@ import GeradorDePerfil from '../GeradorDePerfil'
 import KmlFromPhotos from '../KmlFromPhotos'
 import { useToolContext } from '../../contexts/ToolContext'
 import CheckUpdates from '../CheckUpdates'
+import ShapeVertices from '../ShapeVertices'
 
 const MainPage = () => {
   const { currentTool, setToolState } = useToolContext()
@@ -18,6 +19,10 @@ const MainPage = () => {
     {
       name: 'KML de fotos',
       component: <KmlFromPhotos />,
+    },
+    {
+      name: 'Vertices de shape',
+      component: <ShapeVertices />,
     },
   ]
 
