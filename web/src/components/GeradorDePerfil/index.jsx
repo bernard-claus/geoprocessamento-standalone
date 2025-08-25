@@ -56,7 +56,7 @@ const GeradorDePerfil = () => {
   }
 
   window.handlePercentageComplete = (msg) => {
-    setPercComplete(parseInt(parseFloat(msg) * 0.9 * 100))
+    setPercComplete(parseInt(parseFloat(msg) * 100))
   }
 
   return (

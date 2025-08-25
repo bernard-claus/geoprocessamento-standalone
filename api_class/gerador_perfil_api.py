@@ -11,6 +11,12 @@ class GeradorPerfilApi:
         if isinstance(result, dict):
             return result
         return {'file_data': result, 'file_path': None}
+    
+    def gerar_apenas_perfil(self, inputs):
+      result = gerar_apenas_perfil(self, inputs)
+      if isinstance(result, dict):
+          return result
+      return {'file_data': result, 'file_path': None}
       
     def save_dxf(self, file_data_base64, file_name):
         import base64

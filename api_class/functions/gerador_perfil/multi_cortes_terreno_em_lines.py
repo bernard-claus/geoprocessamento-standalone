@@ -230,7 +230,7 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             output_dict['grid_length'] = line['grid_length']
             lines_to_read = [e for e in msp.query('LINE') if e.dxftype() == 'LINE' and e.dxf.layer==TERRENO_LAYER]
             for line_nr, e in enumerate(lines_to_read):
-                window.evaluate_js(f"window.handlePercentageComplete('{line_nr / len(lines_to_read)}')")
+                window.evaluate_js(f"window.handlePercentageComplete('{(line_nr / len(lines_to_read)) * 0.9}')")
                 temp_intersection = obter_intersecoes(e, line)
                 if temp_intersection != None:
                     intersecoes_da_linha.append(temp_intersection)
@@ -389,7 +389,7 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             file_bytes = f.read()
             file_b64 = base64.b64encode(file_bytes).decode("utf-8")
         window.evaluate_js(f"window.handlePercentageComplete('1')")
-        return {'file_data': file_b64, 'file_path': OUTPUT_FILE_NAME}
+        return {'file_data': file_b64, 'file_path': OUTPUT_FILE_NAME, 'linhas_com_intersecao': linhas_com_intersecao, 'grid_number': grid_number, 'elevation_min': elevation_min, 'elevation_max': elevation_max, 'min_x': min_x, 'min_y': min_y, 'max_x': max_x, 'max_y': max_y }
     except:
         erros_encontrados += 1
         print('Erro ao tentar salvar o documento')
