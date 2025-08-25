@@ -33,9 +33,6 @@ jobs:
     - name: Compile installer with Inno Setup
       run: iscc build_installation_package.iss /dMyAppVersion=${{ github.ref_name }}
 
-    - name: List generated files
-      run: dir /s *.exe
-
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
