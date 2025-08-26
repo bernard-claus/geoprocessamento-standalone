@@ -12,7 +12,7 @@ SolidCompression=yes
 SetupIconFile=geo_proc.ico
 
 [Files]
-Source: "dist\\Geoprocessamento_Gabriela_F\\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "dist\\Geoprocessamento_Gabriela_F\\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 Source: "geo_proc.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
