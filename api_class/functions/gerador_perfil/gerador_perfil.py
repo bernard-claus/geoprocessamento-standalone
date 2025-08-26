@@ -40,7 +40,7 @@ def gerar_perfil_main(input_file_b64):
 
     GRID_COLOR_CODE = 254
     PROFILE_COLOR_CODE = 45
-    OUTPUT_FILE_NAME = f'{''.join(tmp_path.split('.dxf'))}_SAIDA.dxf'
+    OUTPUT_FILE_NAME = f'{"".join(tmp_path.split(".dxf"))}_SAIDA.dxf'
     CORTE_LAYER='PERFIL'
     TERRENO_LAYER='TERRENO'
 
