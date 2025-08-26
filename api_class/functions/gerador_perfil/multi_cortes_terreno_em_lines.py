@@ -72,7 +72,7 @@ def gerar_perfil_multicortes_main(self, input_file_b64, inputs):
             window.evaluate_js(f"window.handleProgress('{tb_str}')")
             return None
 
-    OUTPUT_FILE_NAME = f'{''.join(tmp_path.split('.dxf'))}_SAIDA.dxf'
+    OUTPUT_FILE_NAME = f'{"".join(tmp_path.split(".dxf"))}_SAIDA.dxf'
     
     try:
         doc = ezdxf.readfile(tmp_path)
