@@ -12,7 +12,7 @@ from api_class.kml_photos_api import KmlPhotosApi
 from api_class.api_root import ApiRoot
 
 # Config
-PORT = 5000
+PORT = 5001
 DIST_DIR = os.path.join(os.path.dirname(__file__), "web", "dist")
 GITHUB_REPO = "bernard-claus/geoprocessamento-standalone"
 
