@@ -30,7 +30,7 @@ jobs:
 
     - name: Build executable with PyInstaller
       run: |
-        pyinstaller --clean --noconfirm --windowed --name "Geoprocessamento_Gabriela_F" --icon "geo_proc.ico" --add-data "web/dist;web/dist" --add-data "api_class;api_class" main.py
+        pyinstaller --clean --noconfirm --onefile --windowed --name "Geoprocessamento_Gabriela_F" --icon "geo_proc.ico" --add-data "web/dist;web/dist" --add-data "api_class;api_class" main.py
 
     - name: Install Inno Setup
       run: choco install innosetup --yes
