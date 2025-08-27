@@ -1,8 +1,7 @@
-#define MyAppVersion "0.0.0";
+
 [Setup]
 AppName=Geoprocessamento Gabriela Figueiredo
-//AppVersion=1.2.0
-AppVersion={#MyAppVersion}
+AppVersion=1.2.1
 DefaultDirName={pf}\GeoprocessamentoGabrielaF
 DefaultGroupName=Geoprocessamento Gabriela Figueiredo
 OutputDir=.
