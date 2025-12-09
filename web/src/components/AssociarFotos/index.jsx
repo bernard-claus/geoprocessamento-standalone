@@ -8,23 +8,13 @@ const AssociarFotos = () => {
   const [selectedFolder, setSelectedFolder] = useState('')
   const [selectedFiles, setSelectedFiles] = useState({ kml: '', gcp: '' })
   const [res, setRes] = useState([{}, {}, 0])
-//   const [res, setRes] = useState([
-// 	{ 	
-// 		"1":["DJI_0935.JPG","DJI_0935.JPG"],
-// 		"2":["DJI_0970.JPG","DJI_0970.JPG"]
-// 	},
-// 	{
-// 		"nenhum":[],
-// 		"Poligono Norte":["DJI_0970.JPG"],
-// 		"Poligono Sul":["DJI_0935.JPG"]
-// 	},
-// 	2
-// ])
 
   const fotoPorGcp = res[0]
   const poligonos = res[1]
   const nFotos = res[2]
   const ptosDeControle = res[3]
+
+  const [relativePositions, setRelativePositions] = useState(Object.fromEntries(Object.keys(poligonos).map(k => [k, []]))) //  { nenhum: [{ gcp: 1, poligono: 'nenhum', lat: gcpLat, long: gcpLong, alt: gcpAlt, relX: 200, relY: 1500, file: 'DJI_0006.JPG' }]}
 
   const handleSelectFolder = async () => {
     if (window.pywebview?.api?.utils?.select_folder) {
@@ -53,6 +43,38 @@ const AssociarFotos = () => {
         distancia_max_entre_foto_e_gcp_em_metros: distanciaGcpFoto
       })
       setRes(response)
+      setRelativePositions(Object.fromEntries(Object.keys(response[1]).map(k => [k, []])))
+    }
+  }
+
+  const salvarSessao = async () => {
+    if (window.pywebview?.api?.utils?.salvar_json) {
+      const objSalvo = {
+        distanciaGcpFoto,
+        selectedFolder,
+        selectedFiles,
+        relativePositions,
+      }
+      await window.pywebview.api.utils.salvar_json(JSON.stringify(objSalvo))
+    }
+  }
+
+  const carregarSessao = async () => {
+    if (window.pywebview?.api?.utils?.carregar_json) {
+      const json = await window.pywebview.api.utils.carregar_json()
+      if (json.data ?? false) {
+        const response = await window.pywebview.api.associar_fotos.separar_fotos({
+          CAMINHO: json.data.selectedFolder,
+          CAMINHO_KML_POLIGONOS: json.data.selectedFiles.kml,
+          CAMINHO_PTOS_TRACKMAKER: json.data.selectedFiles.gcp,
+          distancia_max_entre_foto_e_gcp_em_metros: json.data.distanciaGcpFoto
+        })
+        setSelectedFolder(json.data.selectedFolder)
+        setSelectedFiles(json.data.selectedFiles)
+        setRes(response)
+        setRelativePositions(json.data.relativePositions)
+        setDistanciaGcpFoto(json.data.distanciaGcpFoto)
+      }
     }
   }
 
@@ -68,6 +90,10 @@ const AssociarFotos = () => {
       }}
     >
       <div style={{ width: '80%', height: '100%', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'left', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
+          <Button sx={{ padding: 0, textTransform: 'none', marginRight: '10px' }} variant='outlined' onClick={salvarSessao}>Salvar Sessão</Button>
+          <Button sx={{ padding: 0, textTransform: 'none' }} variant='outlined' onClick={carregarSessao}>Carregar Sessão</Button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
           <span style={{ width: '120px' }}><strong>Pasta das fotos: </strong></span>
           {selectedFolder !== '' && (
@@ -92,7 +118,7 @@ const AssociarFotos = () => {
           <Button variant='contained' onClick={handleLerArquivos}>Ler arquivos</Button>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', width: '100%', height: '100%'}}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', width: '100%', height: '100%' }}>
         <span>{`${nFotos} imagens achadas na pasta`}</span>
         <span>{`${Object.keys(poligonos).length} poligonos achados no KML`}</span>
         <span>{`${Object.keys(fotoPorGcp).length} GCPs achados no csv`}</span>
@@ -105,6 +131,8 @@ const AssociarFotos = () => {
             fotoPorGcp={fotoPorGcp}
             ptosDeControle={ptosDeControle}
             selectedFolder={selectedFolder}
+            relativePositions={relativePositions}
+            setRelativePositions={setRelativePositions}
           />
         ))}
       </Grid>

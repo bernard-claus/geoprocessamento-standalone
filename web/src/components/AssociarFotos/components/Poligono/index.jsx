@@ -7,19 +7,21 @@ import ReportGmailerrorredIcon from '@mui/icons-material/ReportGmailerrorred'
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye'
 
 
-const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder }) => {
-  // Cada poligono vai gerar um gcp list
+const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder, relativePositions, setRelativePositions }) => {
 
-  const [relativePositions, setRelativePositions] = useState([]) //  { gcp: 1, poligono: 'nenhum', lat: gcpLat, long: gcpLong, alt: gcpAlt, relX: 200, relY: 1500, file: 'DJI_0006.JPG' }
+  // Cada poligono vai gerar um gcp list
   const [text1, setText1] = useState('')
 
   const downloadGcp = async () => {
     const GCP_HEADER = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs\n'
     let gcp = GCP_HEADER
 
-    for (let i = 0; i < relativePositions.length; i++) {
+    for (let i = 0; i < relativePositions[nomePoligono].length; i++) {
+      const thisRelativePosition = relativePositions[nomePoligono][i]
+      // Pular os (0, 0)
+      if (thisRelativePosition.relX == 0 && thisRelativePosition.relY == 0) continue
       for (const key of ['lat', 'long', 'alt', 'relX', 'relY', 'file']) {
-        gcp += `${relativePositions[i][key]}`
+        gcp += `${thisRelativePosition[key]}`
         if (key === 'file') gcp += '\n'
         else gcp += '\t'
       }
@@ -42,11 +44,11 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
         relY: resp[1],
         file: foto
       }
-      const novoRelativePositions = relativePositions.filter(rp => {
+      const novoRelativePositions = relativePositions[nomePoligono].filter(rp => {
         if (rp.gcp === gcpId && rp.file === foto) return false
         return true
       })
-      setRelativePositions([...novoRelativePositions, novoPonto])
+      setRelativePositions({ [nomePoligono]: [...novoRelativePositions, novoPonto] })
     }
   }
 
@@ -72,11 +74,14 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
           position: 'relative'
         }}
       >
-        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>{nomePoligono}</h3>
-        <Button variant='contained' sx={{ position: 'absolute', top: '10px', right: '10px', textTransform: 'none' }} onClick={downloadGcp}>
-          <DownloadIcon sx={{ fontSize: '14px' }} />
-          gcp_list.txt
-        </Button>
+        <h3 style={{ marginTop: 0, marginBottom: '16px' }}>{`Poligono: ${nomePoligono}`}</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '10px', right: '10px' }}>
+          <Button variant='contained' sx={{textTransform: 'none' }} onClick={downloadGcp}>
+            <DownloadIcon sx={{ fontSize: '14px' }} />
+            gcp_list.txt
+          </Button>
+          <p style={{ maxWidth: '100px' }}>Todas fotos com posição relativa (0, 0) serão desconsiderados</p>
+        </div>
         {Object.entries(fotoPorGcp).map(([gcpId, gcpPhotos]) => {
           // Filter photos that exist in fotosPoligono
           const matchingPhotos = gcpPhotos.filter((photo) => fotosPoligono.includes(photo))
@@ -86,7 +91,7 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
               <h4 style={{ marginBottom: '8px' }}>{`GCP ${gcpId} - (${ptoGcp[1]}, ${ptoGcp[2]})`}</h4>
               <div style={{ paddingLeft: '16px' }}>
                 {matchingPhotos.map((foto) => {
-                  const matchingRelativePosition = relativePositions.find(rp => rp.gcp == ptoGcp[0] && rp.file == foto)
+                  const matchingRelativePosition = relativePositions[nomePoligono].find(rp => rp.gcp == ptoGcp[0] && rp.file == foto)
                   return (
                     <div
                       key={`${gcpId}-${foto}`}
@@ -112,7 +117,9 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
                         <EditIcon sx={{ fontSize: '14px' }} />
                       </Button>
                       <span>{foto}</span>
-                      <span style={{ width: '400px' }}>{!matchingRelativePosition ? '' : `(${matchingRelativePosition.relX}, ${matchingRelativePosition.relY})`}</span>
+                      <span style={{ width: '100px' }}>{!matchingRelativePosition ? '' : `(${matchingRelativePosition.relX}, ${matchingRelativePosition.relY})`}</span>
+                      {!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0 && <CheckCircleOutlineIcon sx={{ color: 'green' }}/>}
+                      {!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0 && <ReportGmailerrorredIcon sx={{ color: '#FFDE21' }}/>}
                     </div>
                   ) })}
               </div>
@@ -120,7 +127,7 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
           )
         })}
         <p>{text1}</p>
-        {relativePositions.map(r => <p>{JSON.stringify(r)}</p>)}
+        {relativePositions[nomePoligono].map(r => <p>{JSON.stringify(r)}</p>)}
       </Box>
     </Grid>
   )

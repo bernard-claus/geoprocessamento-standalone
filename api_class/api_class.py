@@ -3,7 +3,7 @@ import os
 import requests
 from api_class.functions.open_file import open_file_main
 from api_class.constants.version import VERSION
-import base64
+import json
 
 
 __version__ = VERSION  # Update this with each release
@@ -91,3 +91,26 @@ class Api:
                 f.write(file_content)
             return {'success': True, 'saved_path': save_path}
         return {'success': False, 'error': 'Save cancelled'}
+    
+    def salvar_json(self, input_json):
+        save_path = webview.windows[0].create_file_dialog(webview.SAVE_DIALOG, save_filename='sessao.json', file_types=('JSON files (*.json)',))
+        if save_path:
+            # Ensure the file has .json extension
+            if not save_path.endswith('.json'):
+                save_path += '.json'
+            with open(save_path, 'w', encoding='utf-8') as f:
+                f.write(input_json)
+            return {'success': True, 'saved_path': save_path}
+        return {'success': False, 'error': 'Save cancelled'}
+    
+    def carregar_json(self):
+        file_path = webview.windows[0].create_file_dialog(webview.OPEN_DIALOG, file_types=('JSON files (*.json)',))
+        if file_path and isinstance(file_path, tuple) and len(file_path) > 0:
+            selected_file = file_path[0]
+            try:
+                with open(selected_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                return {'success': True, 'data': data, 'file_path': selected_file}
+            except Exception as e:
+                return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': 'No file selected'}
