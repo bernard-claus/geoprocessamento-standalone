@@ -1,11 +1,9 @@
 import webview
 import os
 import requests
-from api_class.functions.greet.greet import greet_main
 from api_class.functions.open_file import open_file_main
-from api_class.functions.gerador_perfil.gerador_perfil import gerar_perfil_main
-from api_class.functions.gerador_perfil.multi_cortes_terreno_em_lines import gerar_perfil_multicortes_main
 from api_class.constants.version import VERSION
+import base64
 
 
 __version__ = VERSION  # Update this with each release
@@ -83,3 +81,13 @@ class Api:
         if result and isinstance(result, tuple) and len(result) > 0:
             return result[0]
         return None
+    
+    def downloadTxt(self, txt):
+        # Create file content in memory
+        file_content = txt.encode('utf-8')
+        save_path = webview.windows[0].create_file_dialog(webview.SAVE_DIALOG, save_filename='gcp_list.csv')
+        if save_path:
+            with open(save_path, 'wb') as f:
+                f.write(file_content)
+            return {'success': True, 'saved_path': save_path}
+        return {'success': False, 'error': 'Save cancelled'}

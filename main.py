@@ -1,14 +1,9 @@
 import os
-import requests
-import webbrowser
 import threading
 import webview
 from flask import Flask, send_from_directory, Response
 import mimetypes
-from api_class.api_class import Api
 from api_class.constants.version import VERSION
-from api_class.gerador_perfil_api import GeradorPerfilApi
-from api_class.kml_photos_api import KmlPhotosApi
 from api_class.api_root import ApiRoot
 
 # Config
