@@ -10,8 +10,6 @@ import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye'
 const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder, relativePositions, setRelativePositions }) => {
 
   // Cada poligono vai gerar um gcp list
-  const [text1, setText1] = useState('')
-
   const downloadGcp = async () => {
     const GCP_HEADER = '+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs\n'
     let gcp = GCP_HEADER
@@ -48,16 +46,30 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
         if (rp.gcp === gcpId && rp.file === foto) return false
         return true
       })
-      setRelativePositions({ [nomePoligono]: [...novoRelativePositions, novoPonto] })
+      setRelativePositions({ ...relativePositions, [nomePoligono]: [...novoRelativePositions, novoPonto] })
     }
   }
 
   const handleVerImagem = async (foto, ptoGcp, matchingRelativePosition) => {
-    setText1(`${typeof (matchingRelativePosition)} / ${JSON.stringify(matchingRelativePosition)}`)
     if (window.pywebview?.api?.associar_fotos?.ver_imagem ?? false) {
       if (matchingRelativePosition) await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], matchingRelativePosition.relX, matchingRelativePosition.relY)
       else await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], null, null)
     }
+  }
+
+  const handleZerarImagem = (foto, ptoGcp) => {
+    const novoRelativePosition = relativePositions[nomePoligono].map(rp => {
+      if (rp.gcp === ptoGcp[0] && rp.file === foto) {
+        return { ...rp, relX: '0', relY: '0' }
+      }
+      return rp
+    })
+    setRelativePositions({ ...relativePositions, [nomePoligono]: novoRelativePosition })
+  }
+
+  const getButtonColor = (matchingRelativePosition) => {
+    if (!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0) return 'green'
+    if (!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0) return '#ceaf00'
   }
 
   return (
@@ -88,10 +100,11 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
           const ptoGcp = ptosDeControle.find(p => p[0] == gcpId)
           return (
             <div key={gcpId} style={{ marginBottom: '16px' }}>
-              <h4 style={{ marginBottom: '8px' }}>{`GCP ${gcpId} - (${ptoGcp[1]}, ${ptoGcp[2]})`}</h4>
+              <h4 style={{ marginBottom: '8px' }}>{`GCP ${gcpId}: (${ptoGcp[1]}, ${ptoGcp[2]})`}</h4>
               <div style={{ paddingLeft: '16px' }}>
                 {matchingPhotos.map((foto) => {
                   const matchingRelativePosition = relativePositions[nomePoligono].find(rp => rp.gcp == ptoGcp[0] && rp.file == foto)
+                  const backgroundColor = getButtonColor(matchingRelativePosition)
                   return (
                     <div
                       key={`${gcpId}-${foto}`}
@@ -104,30 +117,35 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
                     >
                       <Button
                         variant='contained'
+                        onClick={() => handleZerarImagem(foto, ptoGcp)}
+                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                      >
+                        Zerar
+                      </Button>
+                      <Button
+                        variant='contained'
                         onClick={() => handleVerImagem(foto, ptoGcp, matchingRelativePosition)}
-                        sx={{ padding: 0, width: '24px', height: '24px' }}
+                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
                       >
                         <RemoveRedEyeIcon sx={{ fontSize: '14px' }} />
                       </Button>
                       <Button
                         variant='contained'
                         onClick={() => handleEditarImagem(gcpId, foto, ptoGcp)}
-                        sx={{ padding: 0, width: '24px', height: '24px' }}
+                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
                       >
                         <EditIcon sx={{ fontSize: '14px' }} />
                       </Button>
                       <span>{foto}</span>
                       <span style={{ width: '100px' }}>{!matchingRelativePosition ? '' : `(${matchingRelativePosition.relX}, ${matchingRelativePosition.relY})`}</span>
                       {!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0 && <CheckCircleOutlineIcon sx={{ color: 'green' }}/>}
-                      {!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0 && <ReportGmailerrorredIcon sx={{ color: '#FFDE21' }}/>}
+                      {!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0 && <ReportGmailerrorredIcon sx={{ color: '#ceaf00' }}/>}
                     </div>
                   ) })}
               </div>
             </div>
           )
         })}
-        <p>{text1}</p>
-        {relativePositions[nomePoligono].map(r => <p>{JSON.stringify(r)}</p>)}
       </Box>
     </Grid>
   )

@@ -103,13 +103,13 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 		shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
 		if rel_x is not None and rel_y is not None:
 			circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-			cv2.circle(resized, (int(rel_x * percent_scale / 100), int(rel_y * percent_scale / 100)), circle_radius, (0, 255, 0), 2)
-			# Draw
+			center_x = int((rel_x + hor_shift) * percent_scale / 100)
+			center_y = int((rel_y + ver_shift) * percent_scale / 100)
+			cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
+			# Draw crosshair
 			crosshair_length = circle_radius
-			center_x = int(rel_x * percent_scale / 100)
-			center_y = int(rel_y * percent_scale / 100)
-			cv2.line(resized, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-			cv2.line(resized, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+			cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
+			cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
 		cv2.imshow(TITULO, shifted)
 		if is_mask:
 				apply_mask(True)
@@ -136,13 +136,13 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 			# If rel_x and rel_y are provided, draw circle with crosshair in the middle
 			if rel_x is not None and rel_y is not None:
 				circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-				cv2.circle(resized, (int(rel_x * percent_scale / 100), int(rel_y * percent_scale / 100)), circle_radius, (0, 255, 0), 2)
-				# Draw
+				center_x = int((rel_x + hor_shift) * percent_scale / 100)
+				center_y = int((rel_y + ver_shift) * percent_scale / 100)
+				cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
+				# Draw crosshair
 				crosshair_length = circle_radius
-				center_x = int(rel_x * percent_scale / 100)
-				center_y = int(rel_y * percent_scale / 100)
-				cv2.line(resized, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-				cv2.line(resized, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+				cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
+				cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
 			cv2.imshow(TITULO, shifted)
 			if is_mask:
 					apply_mask(True)
@@ -214,7 +214,7 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 				shift_image('right')
 		if key == ord('j') or key == ord('J'):
 				shift_image('left')
-		if key == ord('m') or key == ord('M'):
+		if (key == ord('m') or key == ord('M')) and (rel_x is None and rel_y is None):
 				apply_mask()
 		if key == ord('z') or key == ord('Z'):
 				coord = [0, 0]
@@ -230,13 +230,13 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 				shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
 				if rel_x is not None and rel_y is not None:
 					circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-					cv2.circle(resized, (int(rel_x * percent_scale / 100), int(rel_y * percent_scale / 100)), circle_radius, (0, 255, 0), 2)
-					# Draw
+					center_x = int((rel_x + hor_shift) * percent_scale / 100)
+					center_y = int((rel_y + ver_shift) * percent_scale / 100)
+					cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
+					# Draw crosshair
 					crosshair_length = circle_radius
-					center_x = int(rel_x * percent_scale / 100)
-					center_y = int(rel_y * percent_scale / 100)
-					cv2.line(resized, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-					cv2.line(resized, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+					cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
+					cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
 				cv2.imshow(TITULO, shifted)
 				if is_mask:
 					apply_mask(True)

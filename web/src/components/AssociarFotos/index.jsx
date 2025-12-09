@@ -87,38 +87,45 @@ const AssociarFotos = () => {
         flexDirection: 'column',
         width: '100%',
         height: '100%',
+        position: 'relative'
       }}
     >
+      <div style={{ position: 'absolute', width: '300px', top: 0, right: 0, display: 'flex', flexDirection: 'column' }}>
+        <span>I, J, K, L - Setas direcionais</span>
+        <span>S - Salvar e sair</span>
+        <span>Z - Zerar</span>
+        <span>M - Mascara (branco)</span>
+      </div>
       <div style={{ width: '80%', height: '100%', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'left', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
-          <Button sx={{ padding: 0, textTransform: 'none', marginRight: '10px' }} variant='outlined' onClick={salvarSessao}>Salvar Sessão</Button>
-          <Button sx={{ padding: 0, textTransform: 'none' }} variant='outlined' onClick={carregarSessao}>Carregar Sessão</Button>
+          <Button sx={{ width: '250px', textTransform: 'none', marginRight: '10px' }} variant='outlined' onClick={salvarSessao}>Salvar Sessão</Button>
+          <Button sx={{ width: '250px', textTransform: 'none' }} variant='outlined' onClick={carregarSessao}>Carregar Sessão</Button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
+          <Button sx={{ width: '120px', padding: 0, textTransform: 'none', marginRight: '10px' }} variant='outlined' onClick={handleSelectFolder}>{selectedFolder === '' ? 'Selecionar' : 'Trocar'}</Button>
           <span style={{ width: '120px' }}><strong>Pasta das fotos: </strong></span>
           {selectedFolder !== '' && (
             <span style={{ width: '1000px', overflowX: 'auto', marginLeft: '10px', whiteSpace: 'nowrap' }}>
               {selectedFolder}
             </span>
           )}
-          <Button sx={{ padding: 0, textTransform: 'none', marginLeft: '10px' }} variant='outlined' onClick={handleSelectFolder}>{selectedFolder === '' ? 'Selecionar' : 'Trocar'}</Button>
         </div>
         {Object.keys(selectedFiles).map(type => (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
+            <Button sx={{ width: '120px', padding: 0, textTransform: 'none', marginRight: '10px' }} variant='outlined' onClick={() => handleSelectFile(type)}>{selectedFiles[type] === '' ? 'Selecionar' : 'Trocar'}</Button>
             <span style={{ width: '120px' }}><strong>{`Arquivo ${type}:`}</strong></span>
             {selectedFolder !== '' && <span style={{ width: '1000px', overflowX: 'auto', marginLeft: '10px', whiteSpace: 'nowrap' }}>{selectedFiles[type]}</span>}
-            <Button sx={{ padding: 0, textTransform: 'none', marginLeft: '10px' }} variant='outlined' onClick={() => handleSelectFile(type)}>{selectedFiles[type] === '' ? 'Selecionar' : 'Trocar'}</Button>
           </div>
         ))}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
-          <span style={{ width: '120px' }}><strong>Distancia maxima entre GCP e foto</strong></span>
+          <span style={{ whiteSpace: 'nowrap' }}><strong>Distancia maxima entre GCP e foto</strong></span>
           <TextField sx={{ marginLeft: '10px' }} value={distanciaGcpFoto} onChange={(e) => setDistanciaGcpFoto(e.target.value)} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'left', width: '100%', height: '100%' }}>
           <Button variant='contained' onClick={handleLerArquivos}>Ler arquivos</Button>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', width: '100%', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center', width: '80%', height: '100%' }}>
         <span>{`${nFotos} imagens achadas na pasta`}</span>
         <span>{`${Object.keys(poligonos).length} poligonos achados no KML`}</span>
         <span>{`${Object.keys(fotoPorGcp).length} GCPs achados no csv`}</span>
