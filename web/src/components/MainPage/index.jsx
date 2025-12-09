@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Breadcrumbs, Button, Typography, Box, Stack } from '@mui/material'
+import AssociarFotos from '../AssociarFotos'
 import GeradorDePerfil from '../GeradorDePerfil'
 import KmlFromPhotos from '../KmlFromPhotos'
 import { useToolContext } from '../../contexts/ToolContext'
@@ -9,6 +10,7 @@ import ShapeVertices from '../ShapeVertices'
 const MainPage = () => {
   const { currentTool, setToolState } = useToolContext()
 
+  const sessao = useRef(`${new Date().getFullYear()}_${String(new Date().getMonth() + 1).padStart(2, '0')}_${String(new Date().getDate()).padStart(2, '0')}_${String(new Date().getHours()).padStart(2, '0')}_${String(new Date().getMinutes()).padStart(2, '0')}_${String(new Date().getSeconds()).padStart(2, '0')}`)
   const [version, setVersion] = useState('')
 
   const AVAILABLE_TOOLS = [
@@ -23,6 +25,10 @@ const MainPage = () => {
     {
       name: 'Vertices de shape',
       component: <ShapeVertices />,
+    },
+    {
+      name: 'Associar fotos com GCP',
+      component: <AssociarFotos sessao={sessao.current} />,
     },
   ]
 
