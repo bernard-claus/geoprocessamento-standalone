@@ -14,7 +14,7 @@ tolerancia = 20
 mascara_baixo = [0, 0, 255 - tolerancia] # branco: [0, 0, 255 - tolerancia] - rosa: [130,0,220]
 mascara_cima = [255, tolerancia, 255]  # branco: [255, tolerancia, 255] - rosa: [170,255,255]
 
-def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
+def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_return=False):
 	IMAGEM = os.path.join(CAMINHO, IMAGEM_NOME)
 	TITULO = IMAGEM + ' - GPC # ' + str(PTO_CONTROLE)
 	coord = [0, 0]
@@ -27,14 +27,32 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 		rel_x = float(rel_x)
 		rel_y = float(rel_y)
 
+	def draw_pointer(x, y, image, scale=1.0, color=(0, 255, 0)):
+		# Draws a circle and crosshair at (x, y) on the given image
+		h, w = image.shape[:2]
+		circle_radius = 100
+		center_x = int(x * scale)
+		center_y = int(y * scale)
+		cv2.circle(image, (center_x, center_y), circle_radius, color, 2)
+		crosshair_length = circle_radius
+		crosshair_length = 25  # 50 pixels total (25 on each side)
+		cv2.line(image, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), color, 1)
+		cv2.line(image, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), color, 1)
+
 	def click_event(event, x, y, flags, params): 
-		nonlocal coord
-		# Ignore clicks if rel_x and rel_y are provided
-		if rel_x is not None and rel_y is not None:
-			return 
+		nonlocal coord, hor_shift, ver_shift, percent_scale
+		window_width = cv2.getWindowImageRect(TITULO)[2]
+		window_height = cv2.getWindowImageRect(TITULO)[3]
+		if no_return:
+			return
+  
 		# checking for left mouse clicks 
 		if event == cv2.EVENT_LBUTTONDOWN:
-
+			print('x', x)
+			print('y', y)
+			print('click_event:')
+			print('window_width', window_width)
+			print('window_height', window_height)
 			# displaying the coordinates 
 			# on the Shell 
 			# print(x, ' ', y) 
@@ -58,17 +76,94 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 			resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 			shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
 			if rel_x is not None and rel_y is not None:
-				circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-				cv2.circle(resized, (int(rel_x * percent_scale / 100), int(rel_y * percent_scale / 100)), circle_radius, (0, 255, 0), 2)
-				# Draw
-				crosshair_length = circle_radius
-				center_x = int(rel_x * percent_scale / 100)
-				center_y = int(rel_y * percent_scale / 100)
-				cv2.line(resized, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-				cv2.line(resized, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+				draw_pointer(rel_x, rel_y, shifted, scale=1.0, color=(0, 255, 0))
 			cv2.imshow(TITULO, shifted)
 			coord=[str(int(x / (percent_scale / 100) - hor_shift)), str(int(y / (percent_scale / 100) - ver_shift))]
+   
+   
+		# TODO: Fix MOUSEWHEEL and RBUTTONDOWN functionalities
+		# elif event == cv2.EVENT_MOUSEWHEEL:
+		# 	# Get mouse position in original image coordinates before zoom
+		# 	print('x_scroll', x)
+		# 	print('y_scroll', y)
+		# 	print('window_width', window_width)
+		# 	print('window_height', window_height)
+		# 	print('image_width:', img.shape[1])
+		# 	print('image_height:', img.shape[0])
+		# 	print('percentage_scale:', percent_scale)
 
+		# 	mouse_img_x = x / (percent_scale / 100) - hor_shift
+		# 	mouse_img_y = y / (percent_scale / 100) - ver_shift
+			
+		# 	old_percent_scale = percent_scale
+			
+		# 	if flags > 0:  # Scroll up - zoom in
+		# 		if percent_scale < 500:
+		# 			percent_scale = percent_scale + 10
+		# 	else:  # Scroll down - zoom out
+		# 		if percent_scale > 25:
+		# 			percent_scale = percent_scale - 10
+   
+		# 	# hor_shift -= x * ((percent_scale / 100) - 1)
+		# 	# ver_shift -= y * ((percent_scale / 100) - 1)
+		# 	hor_shift = x / (percent_scale / 100) - mouse_img_x
+		# 	ver_shift = y / (percent_scale / 100) - mouse_img_y
+
+
+		# 	print('mouse_img_x', mouse_img_x)
+		# 	print('mouse_img_y', mouse_img_y)
+
+		# 	print('hor_shift', hor_shift)
+		# 	print('ver_shift', ver_shift)
+		# 	print('END')
+		# 	print('#################')
+		# 	print(' ')
+			
+		# 	# Redraw
+		# 	width = int(img.shape[1] * percent_scale / 100)
+		# 	height = int(img.shape[0] * percent_scale / 100)
+		# 	dim = (width, height)
+		# 	M = np.float32([
+		# 		[1, 0, hor_shift * percent_scale / 100],
+		# 		[0, 1, ver_shift * percent_scale / 100]
+		# 	])
+		# 	resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+		# 	shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
+		# 	if rel_x is not None and rel_y is not None:
+		# 		draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
+		# 	cv2.imshow(TITULO, shifted)
+		# 	if is_mask:
+		# 		apply_mask(True)
+
+		# elif event == cv2.EVENT_RBUTTONDOWN:
+		# 	# Get the current window size and calculate center
+		# 	window_width = cv2.getWindowImageRect(TITULO)[2]
+		# 	window_height = cv2.getWindowImageRect(TITULO)[3]
+
+		# 	# Calculate the actual coordinates in the original image
+		# 	actual_x = int(x / (percent_scale / 100) - hor_shift)
+		# 	actual_y = int(y / (percent_scale / 100) - ver_shift)
+
+		# 	# Calculate new shifts to center the clicked point
+		# 	hor_shift = (window_width / 2) / (percent_scale / 100) - actual_x
+		# 	ver_shift = (window_height / 2) / (percent_scale / 100) - actual_y
+
+		# 	# Redraw the image with new shifts
+		# 	width = int(img.shape[1] * percent_scale / 100)
+		# 	height = int(img.shape[0] * percent_scale / 100)
+		# 	dim = (width, height)
+		# 	M = np.float32([
+		# 		[1, 0, hor_shift * percent_scale / 100],
+		# 		[0, 1, ver_shift * percent_scale / 100]
+		# 	])
+		# 	resized_im = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+		# 	shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
+		# 	if rel_x is not None and rel_y is not None:
+		# 		draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
+		# 	cv2.imshow(TITULO, shifted)
+		# 	if is_mask:
+		# 		apply_mask(True)
+    
 	# def write_file():
 	# 		nonlocal coord
 	# 		print(coord)
@@ -102,14 +197,7 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 		resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 		shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
 		if rel_x is not None and rel_y is not None:
-			circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-			center_x = int((rel_x + hor_shift) * percent_scale / 100)
-			center_y = int((rel_y + ver_shift) * percent_scale / 100)
-			cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
-			# Draw crosshair
-			crosshair_length = circle_radius
-			cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-			cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+			draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
 		cv2.imshow(TITULO, shifted)
 		if is_mask:
 				apply_mask(True)
@@ -133,16 +221,9 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 			])
 			resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 			shifted = cv2.warpAffine(resized, M, (resized.shape[1], resized.shape[0]))
-			# If rel_x and rel_y are provided, draw circle with crosshair in the middle
+			# If rel_x and rel_y are provided, draw circle
 			if rel_x is not None and rel_y is not None:
-				circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-				center_x = int((rel_x + hor_shift) * percent_scale / 100)
-				center_y = int((rel_y + ver_shift) * percent_scale / 100)
-				cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
-				# Draw crosshair
-				crosshair_length = circle_radius
-				cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-				cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+				draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
 			cv2.imshow(TITULO, shifted)
 			if is_mask:
 					apply_mask(True)
@@ -179,16 +260,9 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 	# resize image
 	resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 
-	# If rel_x and rel_y are provided, draw circle with crosshair in the middle
+	# If rel_x and rel_y are provided, draw pointer
 	if rel_x is not None and rel_y is not None:
-		circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-		cv2.circle(resized, (int(rel_x * percent_scale / 100), int(rel_y * percent_scale / 100)), circle_radius, (0, 255, 0), 2)
-		# Draw
-		crosshair_length = circle_radius
-		center_x = int(rel_x * percent_scale / 100)
-		center_y = int(rel_y * percent_scale / 100)
-		cv2.line(resized, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-		cv2.line(resized, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+		draw_pointer(rel_x, rel_y, resized, scale=1.0, color=(0, 255, 0))
 
 	# displaying the image 
 	# cv2.namedWindow(TITULO, cv2.WINDOW_NORMAL)
@@ -201,7 +275,9 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 	key = -1
 
 	while key != ord('s') and key != ord('S'):
-		key = cv2.waitKey(33)
+		key = cv2.waitKey(33) & 0xFF  # Ensure proper event handling
+		if cv2.getWindowProperty(TITULO, cv2.WND_PROP_VISIBLE) < 1:
+			break  # Exit loop if window is closed
 		if key == ord('-'):
 				zoom_image('out')
 		if key == ord('+'):
@@ -229,14 +305,7 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None):
 				resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 				shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
 				if rel_x is not None and rel_y is not None:
-					circle_radius = int(min(img.shape[0], img.shape[1]) * 0.025)  # 5% diameter = 2.5% radius
-					center_x = int((rel_x + hor_shift) * percent_scale / 100)
-					center_y = int((rel_y + ver_shift) * percent_scale / 100)
-					cv2.circle(shifted, (center_x, center_y), circle_radius, (0, 255, 0), 2)
-					# Draw crosshair
-					crosshair_length = circle_radius
-					cv2.line(shifted, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), (0, 255, 0), 2)
-					cv2.line(shifted, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), (0, 255, 0), 2)
+					draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
 				cv2.imshow(TITULO, shifted)
 				if is_mask:
 					apply_mask(True)

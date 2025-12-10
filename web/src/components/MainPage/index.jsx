@@ -6,6 +6,7 @@ import KmlFromPhotos from '../KmlFromPhotos'
 import { useToolContext } from '../../contexts/ToolContext'
 import CheckUpdates from '../CheckUpdates'
 import ShapeVertices from '../ShapeVertices'
+import LoaderModal from '../LoaderModal'
 
 const MainPage = () => {
   const { currentTool, setToolState } = useToolContext()
@@ -58,6 +59,7 @@ const MainPage = () => {
 
   return (
     <Box sx={{ p: 3, position: 'relative' }}>
+      <LoaderModal />
       <span
         style={{
           position: 'absolute',
