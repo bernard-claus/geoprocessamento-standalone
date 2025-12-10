@@ -1,13 +1,23 @@
-import { useState } from 'react'
-import { Box, Button, Grid } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
+import { useSnackbar } from 'notistack'
+import { Box, Button, Checkbox, Grid, Tooltip } from '@mui/material'
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import DownloadIcon from '@mui/icons-material/Download'
 import EditIcon from '@mui/icons-material/Edit'
 import ReportGmailerrorredIcon from '@mui/icons-material/ReportGmailerrorred'
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye'
+import { useLoadingContext } from '../../../../contexts/LoadingContext'
 
 
-const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder, relativePositions, setRelativePositions }) => {
+
+const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder, relativePositions, setRelativePositions }) => {
+
+  const { enqueueSnackbar } = useSnackbar()
+  const { loading, setLoadingState } = useLoadingContext()
+
+  const [referencias, setReferencias] = useState({}) // { [gcp]: ['DJI_0006.JPG'], etc... }
+  const [predictions, setPredictions] = useState({}) // { [gcp]: { bestPoint: [x, y], score: float }, etc... }
+
 
   // Cada poligono vai gerar um gcp list
   const downloadGcp = async () => {
@@ -32,7 +42,13 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
 
   const handleEditarImagem = async (gcpId, foto, ptoGcp) => {
     if (window.pywebview?.api?.associar_fotos?.obter_posicao_relativa_do_pto_na_imagem ?? false) {
-      const resp = await window.pywebview.api.associar_fotos.obter_posicao_relativa_do_pto_na_imagem(foto, selectedFolder, ptoGcp[0])
+      let predX, predY
+      const fotoPred = predictions?.[gcpId]?.[foto] ?? undefined
+      if (fotoPred) {
+        predX = predictions?.[gcpId]?.[foto]?.[0] ?? undefined
+        predY = predictions?.[gcpId]?.[foto]?.[1] ?? undefined
+      }
+      const resp = await window.pywebview.api.associar_fotos.obter_posicao_relativa_do_pto_na_imagem(foto, selectedFolder, ptoGcp[0], predX, predY)
       const novoPonto = {
         gcp: gcpId,
         lat: ptoGcp[1],
@@ -67,9 +83,80 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
     setRelativePositions({ ...relativePositions, [nomePoligono]: novoRelativePosition })
   }
 
+  const handleCheckboxChange = (gcpId, foto, isChecked) => {
+    setReferencias(prev => {
+      const currentList = prev[gcpId] || []
+      if (isChecked) {
+        // Add foto to the list if not already present
+        if (!currentList.includes(foto)) {
+          return { ...prev, [gcpId]: [...currentList, foto] }
+        }
+        return prev
+      }
+      // Remove foto from the list
+      return { ...prev, [gcpId]: currentList.filter(f => f !== foto) }
+    })
+  }
+
   const getButtonColor = (matchingRelativePosition) => {
     if (!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0) return 'green'
-    if (!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0) return '#ceaf00'
+  }
+
+  const handleGetGcpPrediction = async (ptoGcp, foto = null) => {
+    setLoadingState({ loading: true, text: 'Gerando previsao' })
+    if (!referencias?.[ptoGcp[0]]?.length) {
+      enqueueSnackbar('Pelo menos use 1 referência')
+      return
+    }
+
+    if (window.pywebview?.api?.associar_fotos?.predizer_gcp_em_fotos ?? false) {
+      // Process each GCP that has reference images
+      const newPredictions = { ...predictions }
+      if (!Object.keys(predictions).includes(ptoGcp[0])) {
+        newPredictions[ptoGcp[0]] = {}
+      }
+
+      for (const [gcpId, fotosReferencia] of Object.entries(referencias)) {
+        if (fotosReferencia && fotosReferencia.length > 0) {
+          // Get all photos for this GCP
+          const fotosParaPredizer = foto ? [foto] : fotoPorGcp[gcpId] || []
+
+          // Get relative positions for this polygon
+          const relativePositionsForGcp = relativePositions[nomePoligono].reduce((acc, rp) => {
+            acc[rp.file] = { relX: rp.relX, relY: rp.relY }
+            return acc
+          }, {})
+
+          try {
+            const result = await window.pywebview.api.associar_fotos.predizer_gcp_em_fotos(
+              fotosParaPredizer,
+              selectedFolder,
+              gcpId,
+              relativePositionsForGcp,
+              fotosReferencia
+            )
+            // Store results for each photo
+            for (const [foto, predictionData] of Object.entries(result)) {
+              if (predictionData.bestPoint) {
+                newPredictions[gcpId][foto] = predictionData.bestPoint
+              }
+            }
+          } catch (error) {
+            console.error(`Error predicting GCP ${gcpId}:`, error)
+          }
+        }
+      }
+      setPredictions(newPredictions)
+      setLoadingState({ loading: false, text: '' })
+    }
+  }
+
+  const handleErasePrediction = (ptoGcp, foto) => {
+    const newPredictions = { ...predictions }
+    if (newPredictions?.[ptoGcp[0]]?.[foto] ?? false) {
+      delete newPredictions[ptoGcp[0]][foto]
+    }
+    setPredictions(newPredictions)
   }
 
   return (
@@ -100,11 +187,17 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
           const ptoGcp = ptosDeControle.find(p => p[0] == gcpId)
           return (
             <div key={gcpId} style={{ marginBottom: '16px' }}>
-              <h4 style={{ marginBottom: '8px' }}>{`GCP ${gcpId}: (${ptoGcp[1]}, ${ptoGcp[2]})`}</h4>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <h4 style={{ marginBottom: '8px' }}>{`GCP ${gcpId}: (${ptoGcp[1]}, ${ptoGcp[2]})`}</h4>
+                {/* Possivel call para pegar previsao de tds imagens. Nao gostei mto */}
+                {/* <Button onClick={() => handleGetGcpPrediction(ptoGcp)}>Predictions for all points</Button> */}
+              </div>
               <div style={{ paddingLeft: '16px' }}>
-                {matchingPhotos.map((foto) => {
+                {matchingPhotos.sort().map((foto) => {
                   const matchingRelativePosition = relativePositions[nomePoligono].find(rp => rp.gcp == ptoGcp[0] && rp.file == foto)
                   const backgroundColor = getButtonColor(matchingRelativePosition)
+                  const isChecked = referencias[gcpId]?.includes(foto) || false
+                  const prediction = predictions[gcpId]?.[foto] ?? null
                   return (
                     <div
                       key={`${gcpId}-${foto}`}
@@ -113,33 +206,71 @@ const Poligono = ({ fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, sel
                         alignItems: 'center',
                         marginBottom: '8px',
                         gap: '8px',
+                        '&:hover': {
+                          backgroundColor: 'lightGray'
+                        }
                       }}
                     >
-                      <Button
-                        variant='contained'
-                        onClick={() => handleZerarImagem(foto, ptoGcp)}
-                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
-                      >
-                        Zerar
-                      </Button>
-                      <Button
-                        variant='contained'
-                        onClick={() => handleVerImagem(foto, ptoGcp, matchingRelativePosition)}
-                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
-                      >
-                        <RemoveRedEyeIcon sx={{ fontSize: '14px' }} />
-                      </Button>
-                      <Button
-                        variant='contained'
-                        onClick={() => handleEditarImagem(gcpId, foto, ptoGcp)}
-                        sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
-                      >
-                        <EditIcon sx={{ fontSize: '14px' }} />
-                      </Button>
-                      <span>{foto}</span>
+                      <Tooltip title='Selecionar essa imagem como referencia para prever o GCP em outras imagens'>
+                        <Checkbox
+                          checked={isChecked}
+                          onChange={(e) => handleCheckboxChange(gcpId, foto, e.target.checked)}
+                          sx={{ padding: 0 }}
+                        />
+                      </Tooltip>
+                      <Tooltip title='Bota as coordenadas da imagem como (0, 0) - e assim ela é ignorada para o gcp_list.txt'>
+                        <Button
+                          variant='contained'
+                          onClick={() => handleZerarImagem(foto, ptoGcp)}
+                          sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                        >
+                          Zerar
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title='Ver a imagem. Aqui o clique não faz nada. Se já foi selecionado um GCP, ele vai aparecer no meio de um circulo'>
+                        <Button
+                          variant='contained'
+                          onClick={() => handleVerImagem(foto, ptoGcp, matchingRelativePosition)}
+                          sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                        >
+                          <RemoveRedEyeIcon sx={{ fontSize: '14px' }} />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip title='Editar posicao relativa do GCP nesta imagem. Se existe uma previsao ela vai aparecer no centro de um circulo'>
+                        <Button
+                          variant='contained'
+                          onClick={() => handleEditarImagem(gcpId, foto, ptoGcp)}
+                          sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                        >
+                          <EditIcon sx={{ fontSize: '14px' }} />
+                        </Button>
+                      </Tooltip>
+                      <span><strong>{foto}</strong></span>
+                      {distanciasFotoPto?.[ptoGcp[0]]?.[foto] && <span>{`${distanciasFotoPto?.[ptoGcp[0]]?.[foto] ?? ''} m`}</span>}
                       <span style={{ width: '100px' }}>{!matchingRelativePosition ? '' : `(${matchingRelativePosition.relX}, ${matchingRelativePosition.relY})`}</span>
-                      {!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0 && <CheckCircleOutlineIcon sx={{ color: 'green' }}/>}
-                      {!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0 && <ReportGmailerrorredIcon sx={{ color: '#ceaf00' }}/>}
+                      <div style={{ width: '50px' }}>
+                        {!!matchingRelativePosition && matchingRelativePosition.relX != 0 && matchingRelativePosition.relY != 0 && <CheckCircleOutlineIcon sx={{ color: 'green' }}/>}
+                        {!!matchingRelativePosition && matchingRelativePosition.relX == 0 && matchingRelativePosition.relY == 0 && <ReportGmailerrorredIcon sx={{ color: '#ffc400ff' }}/>}
+                      </div>
+                      <Tooltip title='Prevê um ponto semelhante aos selecionados nas imagens usadas como referencia (as que tem o checkbox marcado)'>
+                        <Button
+                          variant='contained'
+                          onClick={() => handleGetGcpPrediction(ptoGcp, foto)}
+                          sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                        >
+                          Prever
+                        </Button>
+                      </Tooltip>
+                      {!!prediction && <span>{JSON.stringify(prediction)}</span>}
+                      {!!prediction && (
+                        <Button
+                          variant='contained'
+                          onClick={() => handleErasePrediction(ptoGcp, foto)}
+                          sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
+                        >
+                          Apagar
+                        </Button>
+                      )}
                     </div>
                   ) })}
               </div>

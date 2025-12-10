@@ -31,6 +31,8 @@ def executar_separar_fotos(inputs):
       ptos_de_controle.append(row)
 
   fotos_dos_pc = {}
+  
+  distancias_foto_pto = {}
 
   fotos_em_poligonos = { 'nenhum': [] }
 
@@ -41,6 +43,10 @@ def executar_separar_fotos(inputs):
   if nro_fotos == 0:
     print('Nao foram achados arquivos .JPG no diretorio fornecido: ' + CAMINHO)
     sys.exit()
+
+  def iniciar_distancias_foto_pto():
+    for row in ptos_de_controle:
+      distancias_foto_pto[row[0]] = {}
 
   def iniciar_fotos_dos_pc():
     for row in ptos_de_controle:
@@ -79,6 +85,7 @@ def executar_separar_fotos(inputs):
               caminho_contem_ponto = caminho.contains_point((latitude, longitude))
             for ponto in ptos_de_controle:
               distancia_foto_gcp = mpu.haversine_distance((latitude, longitude), (float(ponto[1]), float(ponto[2])))
+              distancias_foto_pto[ponto[0]][file] = round(distancia_foto_gcp * 1000)
               # caminho_pto = mpltPath.Path([
                 # (float(ponto[1]) + distancia_para_achar_pc, float(ponto[2]) - distancia_para_achar_pc * abs(40075 * math.cos(float(ponto[1])) / 360)),
                 # (float(ponto[1]) + distancia_para_achar_pc, float(ponto[2]) + distancia_para_achar_pc * abs(40075 * math.cos(float(ponto[1])) / 360)),
@@ -125,8 +132,9 @@ def executar_separar_fotos(inputs):
   iniciar_fotos_dos_pc()
   iniciar_fotos_em_poligonos()
   iniciar_kml_dos_poligonos()
+  iniciar_distancias_foto_pto()
   rodar()
   criar_pasta_sessoes()
   
-  return fotos_dos_pc, fotos_em_poligonos, nro_fotos, ptos_de_controle
+  return fotos_dos_pc, fotos_em_poligonos, nro_fotos, ptos_de_controle, distancias_foto_pto
 
