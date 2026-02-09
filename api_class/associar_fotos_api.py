@@ -15,6 +15,7 @@ class AssociarFotosApi:
         return abrir_imagem(foto, caminho, pto_controle_nome, pred_x, pred_y)
     
     def ver_imagem(self, foto, caminho, pto_controle_nome, rel_x, rel_y):
+      print('Ver imagem: rel_x/y: ', rel_x, rel_y)
       return abrir_imagem(foto, caminho, pto_controle_nome, rel_x, rel_y, no_return=True)
   
     def predizer_gcp_em_fotos(self, fotos, caminho, pto_controle_nome, relative_positions, fotos_referencia):
