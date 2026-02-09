@@ -7,17 +7,17 @@ import EditIcon from '@mui/icons-material/Edit'
 import ReportGmailerrorredIcon from '@mui/icons-material/ReportGmailerrorred'
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye'
 import { useLoadingContext } from '../../../../contexts/LoadingContext'
-
+import { useToolContext } from '../../../../contexts/ToolContext'
 
 
 const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, ptosDeControle, selectedFolder, relativePositions, setRelativePositions }) => {
 
   const { enqueueSnackbar } = useSnackbar()
   const { loading, setLoadingState } = useLoadingContext()
+  const { thereIsAnOpenImage, setToolState } = useToolContext()
 
   const [referencias, setReferencias] = useState({}) // { [gcp]: ['DJI_0006.JPG'], etc... }
   const [predictions, setPredictions] = useState({}) // { [gcp]: { bestPoint: [x, y], score: float }, etc... }
-
 
   // Cada poligono vai gerar um gcp list
   const downloadGcp = async () => {
@@ -41,35 +41,54 @@ const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, 
   }
 
   const handleEditarImagem = async (gcpId, foto, ptoGcp) => {
-    if (window.pywebview?.api?.associar_fotos?.obter_posicao_relativa_do_pto_na_imagem ?? false) {
-      let predX, predY
-      const fotoPred = predictions?.[gcpId]?.[foto] ?? undefined
-      if (fotoPred) {
-        predX = predictions?.[gcpId]?.[foto]?.[0] ?? undefined
-        predY = predictions?.[gcpId]?.[foto]?.[1] ?? undefined
+    try {
+      if (window.pywebview?.api?.associar_fotos?.obter_posicao_relativa_do_pto_na_imagem ?? false) {
+        if (thereIsAnOpenImage) return
+        setToolState({ thereIsAnOpenImage: true })
+        let predX, predY
+        const fotoPred = predictions?.[gcpId]?.[foto] ?? undefined
+        if (fotoPred) {
+          predX = predictions?.[gcpId]?.[foto]?.[0] ?? undefined
+          predY = predictions?.[gcpId]?.[foto]?.[1] ?? undefined
+        }
+        const resp = await window.pywebview.api.associar_fotos.obter_posicao_relativa_do_pto_na_imagem(foto, selectedFolder, ptoGcp[0], predX, predY)
+        if (!resp) {
+          enqueueSnackbar('Nada foi alterado', { variant: 'info' })
+          setToolState({ thereIsAnOpenImage: false })
+          return
+        }
+        const novoPonto = {
+          gcp: gcpId,
+          lat: ptoGcp[1],
+          long: ptoGcp[2],
+          alt: ptoGcp[3],
+          relX: resp[0],
+          relY: resp[1],
+          file: foto
+        }
+        const novoRelativePositions = relativePositions[nomePoligono].filter(rp => {
+          if (rp.gcp === gcpId && rp.file === foto) return false
+          return true
+        })
+        setRelativePositions({ ...relativePositions, [nomePoligono]: [...novoRelativePositions, novoPonto] })
+        setToolState({ thereIsAnOpenImage: false })
       }
-      const resp = await window.pywebview.api.associar_fotos.obter_posicao_relativa_do_pto_na_imagem(foto, selectedFolder, ptoGcp[0], predX, predY)
-      const novoPonto = {
-        gcp: gcpId,
-        lat: ptoGcp[1],
-        long: ptoGcp[2],
-        alt: ptoGcp[3],
-        relX: resp[0],
-        relY: resp[1],
-        file: foto
-      }
-      const novoRelativePositions = relativePositions[nomePoligono].filter(rp => {
-        if (rp.gcp === gcpId && rp.file === foto) return false
-        return true
-      })
-      setRelativePositions({ ...relativePositions, [nomePoligono]: [...novoRelativePositions, novoPonto] })
+    } catch (e) {
+      setToolState({ thereIsAnOpenImage: false })
     }
   }
 
   const handleVerImagem = async (foto, ptoGcp, matchingRelativePosition) => {
-    if (window.pywebview?.api?.associar_fotos?.ver_imagem ?? false) {
-      if (matchingRelativePosition) await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], matchingRelativePosition.relX, matchingRelativePosition.relY)
-      else await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], null, null)
+    try {
+      if (window.pywebview?.api?.associar_fotos?.ver_imagem ?? false) {
+        if (thereIsAnOpenImage) return
+        setToolState({ thereIsAnOpenImage: true })
+        if (matchingRelativePosition) await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], matchingRelativePosition.relX, matchingRelativePosition.relY)
+        else await window.pywebview.api.associar_fotos.ver_imagem(foto, selectedFolder, ptoGcp[0], null, null)
+        setToolState({ thereIsAnOpenImage: false })
+      }
+    } catch (e) {
+      setToolState({ thereIsAnOpenImage: false })
     }
   }
 
@@ -175,7 +194,7 @@ const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, 
       >
         <h3 style={{ marginTop: 0, marginBottom: '16px' }}>{`Poligono: ${nomePoligono}`}</h3>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: '10px', right: '10px' }}>
-          <Button variant='contained' sx={{textTransform: 'none' }} onClick={downloadGcp}>
+          <Button variant='contained' sx={{ textTransform: 'none' }} onClick={downloadGcp}>
             <DownloadIcon sx={{ fontSize: '14px' }} />
             gcp_list.txt
           </Button>
@@ -229,6 +248,7 @@ const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, 
                       </Tooltip>
                       <Tooltip title='Ver a imagem. Aqui o clique não faz nada. Se já foi selecionado um GCP, ele vai aparecer no meio de um circulo'>
                         <Button
+                          disabled={thereIsAnOpenImage}
                           variant='contained'
                           onClick={() => handleVerImagem(foto, ptoGcp, matchingRelativePosition)}
                           sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}
@@ -238,6 +258,7 @@ const Poligono = ({ distanciasFotoPto, fotosPoligono, fotoPorGcp, nomePoligono, 
                       </Tooltip>
                       <Tooltip title='Editar posicao relativa do GCP nesta imagem. Se existe uma previsao ela vai aparecer no centro de um circulo'>
                         <Button
+                          disabled={thereIsAnOpenImage}
                           variant='contained'
                           onClick={() => handleEditarImagem(gcpId, foto, ptoGcp)}
                           sx={{ padding: 0, width: '24px', height: '24px', backgroundColor }}

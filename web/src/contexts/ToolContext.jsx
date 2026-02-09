@@ -2,6 +2,7 @@ import { createContext, useState, useMemo, useContext } from 'react'
 
 const INITIAL_OPTION = {
   currentTool: '',
+  thereIsAnOpenImage: false,
   setToolState: () => {},
 }
 
@@ -25,9 +26,3 @@ const ToolContextProvider = ({ children }) => {
 }
 
 export { ToolContextProvider, useToolContext }
-
-
-
-
-
-

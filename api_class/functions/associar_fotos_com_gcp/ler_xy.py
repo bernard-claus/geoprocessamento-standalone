@@ -18,17 +18,24 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
 	IMAGEM = os.path.join(CAMINHO, IMAGEM_NOME)
 	TITULO = IMAGEM + ' - GPC # ' + str(PTO_CONTROLE)
 	coord = [0, 0]
+	panning = False
+	panning_x, panning_y = 0, 0
 	incrementos_shift = 100
 	percent_scale = 100
 	hor_shift = 0
 	ver_shift = 0
+	last_x = 0
+	last_y = 0
 	is_mask = False
 	if rel_x is not None and rel_y is not None:
 		rel_x = float(rel_x)
 		rel_y = float(rel_y)
 
+	print(rel_x, rel_y)
+
 	def draw_pointer(x, y, image, scale=1.0, color=(0, 255, 0)):
 		# Draws a circle and crosshair at (x, y) on the given image
+		print('on draw x/y: ', x, y)
 		h, w = image.shape[:2]
 		circle_radius = 100
 		center_x = int(x * scale)
@@ -39,26 +46,14 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
 		cv2.line(image, (center_x - crosshair_length, center_y), (center_x + crosshair_length, center_y), color, 1)
 		cv2.line(image, (center_x, center_y - crosshair_length), (center_x, center_y + crosshair_length), color, 1)
 
-	def click_event(event, x, y, flags, params): 
-		nonlocal coord, hor_shift, ver_shift, percent_scale
-		window_width = cv2.getWindowImageRect(TITULO)[2]
-		window_height = cv2.getWindowImageRect(TITULO)[3]
-		if no_return:
-			return
+	def mouse_event(event, x, y, flags, params): 
+		nonlocal coord, hor_shift, ver_shift, percent_scale, last_x, last_y, window_width, window_height, panning_x, panning_y, panning
   
 		# checking for left mouse clicks 
 		if event == cv2.EVENT_LBUTTONDOWN:
-			print('x', x)
-			print('y', y)
-			print('click_event:')
-			print('window_width', window_width)
-			print('window_height', window_height)
-			# displaying the coordinates 
-			# on the Shell 
-			# print(x, ' ', y) 
-
-			# displaying the coordinates 
-			# on the image window 
+			if no_return:
+				return
+			
 			font = cv2.FONT_HERSHEY_SIMPLEX 
 			cv2.putText(img,
 								str(int(x / (percent_scale / 100) - hor_shift)) +
@@ -82,88 +77,137 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
    
    
 		# TODO: Fix MOUSEWHEEL and RBUTTONDOWN functionalities
-		# elif event == cv2.EVENT_MOUSEWHEEL:
-		# 	# Get mouse position in original image coordinates before zoom
-		# 	print('x_scroll', x)
-		# 	print('y_scroll', y)
-		# 	print('window_width', window_width)
-		# 	print('window_height', window_height)
-		# 	print('image_width:', img.shape[1])
-		# 	print('image_height:', img.shape[0])
-		# 	print('percentage_scale:', percent_scale)
+		elif event == cv2.EVENT_MOUSEWHEEL:
+			# Get mouse position in original image coordinates before zoom
+			x = last_x
+			y = last_y
 
-		# 	mouse_img_x = x / (percent_scale / 100) - hor_shift
-		# 	mouse_img_y = y / (percent_scale / 100) - ver_shift
+			mouse_img_x = x / (percent_scale / 100) - hor_shift
+			mouse_img_y = y / (percent_scale / 100) - ver_shift
 			
-		# 	old_percent_scale = percent_scale
+			old_percent_scale = percent_scale
 			
-		# 	if flags > 0:  # Scroll up - zoom in
-		# 		if percent_scale < 500:
-		# 			percent_scale = percent_scale + 10
-		# 	else:  # Scroll down - zoom out
-		# 		if percent_scale > 25:
-		# 			percent_scale = percent_scale - 10
+			if flags > 0:  # Scroll up - zoom in
+				if percent_scale < 500:
+					percent_scale = percent_scale + 10
+			else:  # Scroll down - zoom out
+				if percent_scale > 25:
+					percent_scale = percent_scale - 10
    
-		# 	# hor_shift -= x * ((percent_scale / 100) - 1)
-		# 	# ver_shift -= y * ((percent_scale / 100) - 1)
-		# 	hor_shift = x / (percent_scale / 100) - mouse_img_x
-		# 	ver_shift = y / (percent_scale / 100) - mouse_img_y
-
-
-		# 	print('mouse_img_x', mouse_img_x)
-		# 	print('mouse_img_y', mouse_img_y)
-
-		# 	print('hor_shift', hor_shift)
-		# 	print('ver_shift', ver_shift)
-		# 	print('END')
-		# 	print('#################')
-		# 	print(' ')
+			# hor_shift -= x * ((percent_scale / 100) - 1)
+			# ver_shift -= y * ((percent_scale / 100) - 1)
+			hor_shift = x / (percent_scale / 100) - mouse_img_x
+			ver_shift = y / (percent_scale / 100) - mouse_img_y
 			
-		# 	# Redraw
-		# 	width = int(img.shape[1] * percent_scale / 100)
-		# 	height = int(img.shape[0] * percent_scale / 100)
-		# 	dim = (width, height)
-		# 	M = np.float32([
-		# 		[1, 0, hor_shift * percent_scale / 100],
-		# 		[0, 1, ver_shift * percent_scale / 100]
-		# 	])
-		# 	resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
-		# 	shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
-		# 	if rel_x is not None and rel_y is not None:
-		# 		draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
-		# 	cv2.imshow(TITULO, shifted)
-		# 	if is_mask:
-		# 		apply_mask(True)
+			# Redraw
+			width = int(img.shape[1] * percent_scale / 100)
+			height = int(img.shape[0] * percent_scale / 100)
+			dim = (width, height)
+			total_horizontal_shift = hor_shift * percent_scale / 100
+			total_vertical_shift = ver_shift * percent_scale / 100
 
-		# elif event == cv2.EVENT_RBUTTONDOWN:
-		# 	# Get the current window size and calculate center
-		# 	window_width = cv2.getWindowImageRect(TITULO)[2]
-		# 	window_height = cv2.getWindowImageRect(TITULO)[3]
-
-		# 	# Calculate the actual coordinates in the original image
-		# 	actual_x = int(x / (percent_scale / 100) - hor_shift)
-		# 	actual_y = int(y / (percent_scale / 100) - ver_shift)
-
-		# 	# Calculate new shifts to center the clicked point
-		# 	hor_shift = (window_width / 2) / (percent_scale / 100) - actual_x
-		# 	ver_shift = (window_height / 2) / (percent_scale / 100) - actual_y
-
-		# 	# Redraw the image with new shifts
-		# 	width = int(img.shape[1] * percent_scale / 100)
-		# 	height = int(img.shape[0] * percent_scale / 100)
-		# 	dim = (width, height)
-		# 	M = np.float32([
-		# 		[1, 0, hor_shift * percent_scale / 100],
-		# 		[0, 1, ver_shift * percent_scale / 100]
-		# 	])
-		# 	resized_im = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
-		# 	shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
-		# 	if rel_x is not None and rel_y is not None:
-		# 		draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
-		# 	cv2.imshow(TITULO, shifted)
-		# 	if is_mask:
-		# 		apply_mask(True)
+			current_image_width = img.shape[1] * percent_scale / 100
+			current_image_height = img.shape[0] * percent_scale / 100
+     
+			# cima e esquerda: shift não pode ser negativo
+			# direita e baixo: shift + tamanho da imagem não pode ser menor que tamanho janela  
+			if flags < 0:
+				if current_image_width + total_horizontal_shift < window_width:
+					offset = window_width - (current_image_width + total_horizontal_shift)
+					total_horizontal_shift += offset
+				if current_image_height + total_vertical_shift < window_height:
+					offset = window_height - (current_image_height + total_vertical_shift)
+					total_vertical_shift += offset
+     
+				if total_horizontal_shift > 0:
+					total_horizontal_shift = 0
+				if total_vertical_shift > 0:
+					total_vertical_shift = 0
     
+				if current_image_width <= window_width:
+					total_horizontal_shift = 0
+				if current_image_height <= window_width:
+					total_vertical_shift = 0
+
+			hor_shift = total_horizontal_shift / (percent_scale / 100)
+			ver_shift = total_vertical_shift / (percent_scale / 100)
+   
+			M = np.float32([
+				[1, 0, total_horizontal_shift],
+				[0, 1, total_vertical_shift]
+			])
+			resized_im = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+			shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
+			if rel_x is not None and rel_y is not None:
+				draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
+			cv2.imshow(TITULO, shifted)
+			if is_mask:
+				apply_mask(True)
+
+		# Pan
+		elif event == cv2.EVENT_RBUTTONDOWN:
+			# Get the current window size and calculate center
+			panning = True
+			panning_x = x
+			panning_y = y
+
+			# # Calculate the actual coordinates in the original image
+			# actual_x = int(x / (percent_scale / 100) - hor_shift)
+			# actual_y = int(y / (percent_scale / 100) - ver_shift)
+
+			# # Calculate new shifts to center the clicked point
+			# hor_shift = (window_width / 2) / (percent_scale / 100) - actual_x
+			# ver_shift = (window_height / 2) / (percent_scale / 100) - actual_y
+
+			# # Redraw the image with new shifts
+			# width = int(img.shape[1] * percent_scale / 100)
+			# height = int(img.shape[0] * percent_scale / 100)
+			# dim = (width, height)
+			# M = np.float32([
+			# 	[1, 0, hor_shift * percent_scale / 100],
+			# 	[0, 1, ver_shift * percent_scale / 100]
+			# ])
+			# resized_im = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+			# shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
+			# if rel_x is not None and rel_y is not None:
+			# 	draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
+			# cv2.imshow(TITULO, shifted)
+			# if is_mask:
+			# 	apply_mask(True)
+
+		elif event == cv2.EVENT_MOUSEMOVE:
+			if panning:
+				print('hor_shift_prev: ', hor_shift)
+				print('ver_shift_prev: ', ver_shift)
+				print('x: ', x)
+				print('panning_x: ', panning_x)
+				print('percent_scale: ', percent_scale)
+				print('percent_scale / 100: ', percent_scale / 100)
+				print('panning_x * (percent_scale / 100): ', panning_x * (percent_scale / 100))
+				print('x - panning_x * (percent_scale / 100): ', x - panning_x * (percent_scale / 100))
+				hor_shift += (x - panning_x) * (percent_scale / 100)
+				ver_shift += (y - panning_y) * (percent_scale / 100)
+				print('hor_shift_post: ', hor_shift)
+				print('ver_shift_post: ', ver_shift)
+				# Redraw the image with new shifts
+				width = int(img.shape[1] * percent_scale / 100)
+				height = int(img.shape[0] * percent_scale / 100)
+				dim = (width, height)
+				M = np.float32([
+					[1, 0, hor_shift * percent_scale / 100],
+					[0, 1, ver_shift * percent_scale / 100]
+				])
+				resized_im = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+				shifted = cv2.warpAffine(resized_im, M, (resized_im.shape[1], resized_im.shape[0]))
+				if rel_x is not None and rel_y is not None:
+					draw_pointer(rel_x + hor_shift, rel_y + ver_shift, shifted, scale=percent_scale/100, color=(0, 255, 0))
+				cv2.imshow(TITULO, shifted)
+				if is_mask:
+					apply_mask(True)
+			last_x = x
+			last_y = y
+		elif event == cv2.EVENT_RBUTTONUP:
+			panning = False
 	# def write_file():
 	# 		nonlocal coord
 	# 		print(coord)
@@ -253,6 +297,29 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
 
 	# reading the image 
 	img = cv2.imread(IMAGEM, 1) 
+	
+
+	# displaying the image 
+	# cv2.namedWindow(TITULO, cv2.WINDOW_NORMAL)
+	blank_image = np.zeros((1, 1, 3), dtype=np.uint8)
+	cv2.namedWindow('TEMP_WINDOW', cv2.WINDOW_NORMAL)
+
+	# Display the blank image in the window
+	cv2.imshow('TEMP_WINDOW', blank_image)
+	cv2.setWindowProperty(
+    'TEMP_WINDOW',
+    cv2.WND_PROP_FULLSCREEN,
+    cv2.WINDOW_FULLSCREEN
+	)
+	
+	screen_width = cv2.getWindowImageRect('TEMP_WINDOW')[2]
+	screen_height = cv2.getWindowImageRect('TEMP_WINDOW')[3]
+ 
+	image_width =  img.shape[1]
+	image_height =  img.shape[0]
+	initial_scale = min(screen_width / image_width, screen_height / image_height)
+	percent_scale = initial_scale * 100
+ 
 	width = int(img.shape[1] * percent_scale / 100)
 	height = int(img.shape[0] * percent_scale / 100)
 	dim = (width, height)
@@ -261,15 +328,20 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
 	resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
 
 	# If rel_x and rel_y are provided, draw pointer
+	print('rel_x: ', rel_x)
+	print('rel_y: ', rel_y)
 	if rel_x is not None and rel_y is not None:
-		draw_pointer(rel_x, rel_y, resized, scale=1.0, color=(0, 255, 0))
-
-	# displaying the image 
-	# cv2.namedWindow(TITULO, cv2.WINDOW_NORMAL)
+		draw_pointer(rel_x, rel_y, resized, scale=initial_scale, color=(0, 255, 0))
+	
+	cv2.destroyAllWindows() 
 	cv2.imshow(TITULO, resized)
+	
+	window_width = cv2.getWindowImageRect(TITULO)[2]
+	window_height = cv2.getWindowImageRect(TITULO)[3]
+
 	# setting mouse handler for the image 
-	# and calling the click_event() function 
-	cv2.setMouseCallback(TITULO, click_event) 
+	# and calling the mouse_event() function 
+	cv2.setMouseCallback(TITULO, mouse_event) 
 
 	# wait for a key to be pressed to exit 
 	key = -1
@@ -277,7 +349,8 @@ def abrir_imagem(IMAGEM_NOME, CAMINHO, PTO_CONTROLE, rel_x=None, rel_y=None, no_
 	while key != ord('s') and key != ord('S'):
 		key = cv2.waitKey(33) & 0xFF  # Ensure proper event handling
 		if cv2.getWindowProperty(TITULO, cv2.WND_PROP_VISIBLE) < 1:
-			break  # Exit loop if window is closed
+			cv2.destroyAllWindows() 
+			return None
 		if key == ord('-'):
 				zoom_image('out')
 		if key == ord('+'):
